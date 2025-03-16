@@ -1,12 +1,21 @@
-FROM node:23.4.0-alpine AS production
+# Use Node.js base image
+FROM node:18-alpine
 
+# Set working directory
 WORKDIR /app
 
-COPY package.json .
-RUN npm install --only=production
+# Copy package.json and install dependencies
+COPY package.json package-lock.json ./
+RUN npm install --production
 
+# Copy source code
 COPY ./dist .
 
+# Set environment variable
+ENV WS_PORT=8080
+
+# Expose WebSocket port
 EXPOSE 8080
 
+# Start WebSocket server
 CMD ["node", "index.js"]

@@ -75,15 +75,6 @@ export class Game {
             }));
         }
 
-
-
-        console.log(move);
-        console.log(this.board.ascii());
-        console.log(this.board.fen());
-        console.log(this.board.history());
-        console.log(this.board.turn()); // go to both parties
-        console.log(this.board.history({ verbose: true }))
-
         this.MoveCount++;
     }
 }

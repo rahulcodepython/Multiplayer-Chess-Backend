@@ -1,5 +1,5 @@
 import { WebSocket } from "ws";
-import { INIT_GAME, MOVE } from "./messeges";
+import { INIT_GAME, MOVE, WAITING_FOR_PLAYER } from "./messeges";
 import { Game } from "./Game";
 
 export class GameManager {
@@ -13,13 +13,41 @@ export class GameManager {
         this.users = [];
     }
 
-    addUser(socket: WebSocket) {
-        this.users.push(socket);
-        this.addHandler(socket);
+    addUser(socket: WebSocket): boolean {
+        if (this.users.length < 2) {
+            this.users.push(socket);
+            this.addHandler(socket);
+            if (this.users.length === 1) {
+                socket.send(JSON.stringify({ type: WAITING_FOR_PLAYER, payload: 'Waiting for opponent' }));
+            }
+            return true;
+        } else {
+            return false;
+        }
     }
 
     removeUser(socket: WebSocket) {
+        console.log("Removing user...");
+
+        // Remove from users list
         this.users = this.users.filter(user => user !== socket);
+
+        // Clear pending user if they were the one waiting
+        if (this.pendingUser === socket) {
+            this.pendingUser = null;
+        }
+
+        // Find and remove any game where the player was present
+        this.games = this.games.filter(game => {
+            if (game.player1 === socket || game.player2 === socket) {
+                console.log("Game removed due to player disconnect");
+                return false; // Remove this game
+            }
+            return true; // Keep other games
+        });
+
+        // Close the WebSocket connection
+        socket.close();
     }
 
     private addHandler(socket: WebSocket) {
